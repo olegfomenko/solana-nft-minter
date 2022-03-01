@@ -1,4 +1,4 @@
-module github.com/olegfomenko/stop_war_ukraine
+module github.com/olegfomenko/solana-nft-minter
 
 go 1.17
 

@@ -1,4 +1,4 @@
-package metadata
+package solana
 
 type Metadata struct {
 	Name                 string      `json:"name"`
