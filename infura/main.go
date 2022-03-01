@@ -16,7 +16,7 @@ type infura struct {
 	infuraURL string
 }
 
-func NewGenerator(shell *ipfs.Shell, infuraURL string) Infura {
+func NewInfura(shell *ipfs.Shell, infuraURL string) Infura {
 	return &infura{
 		infura:    shell,
 		infuraURL: infuraURL,
