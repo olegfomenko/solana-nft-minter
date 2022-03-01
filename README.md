@@ -1,3 +1,3 @@
 # Solana NFT Minter
 
-Script for minting NFT from specified image on admin's account
+Library for minting NFTs from specified image on receiver account
