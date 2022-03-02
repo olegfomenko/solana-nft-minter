@@ -1,14 +1,14 @@
 package infura
 
 import (
-	"fmt"
 	ipfs "github.com/ipfs/go-ipfs-api"
-	"github.com/olegfomenko/solana-nft-minter/solana"
-	"github.com/pkg/errors"
+	"net/http"
 )
 
 type Infura interface {
-	InitMetadata(metadata solana.Metadata, path string) (string, error)
+	AddInfuraJSON(val interface{}) (string, error)
+	AddInfuraImage(path string) (string, error)
+	GetLinkIPFS(cid string) string
 }
 
 type infura struct {
@@ -23,16 +23,28 @@ func NewInfura(shell *ipfs.Shell, infuraURL string) Infura {
 	}
 }
 
-func (i *infura) InitMetadata(metadata solana.Metadata, path string) (string, error) {
-	cid, err := i.AddInfuraImage(path)
-	if err != nil {
-		return "", errors.Wrap(err, "error saving image to infura")
-	}
+type authTransport struct {
+	http.RoundTripper
+	ProjectId     string
+	ProjectSecret string
+}
 
-	cid, err = i.AddInfuraJSON(metadata)
-	if err != nil {
-		return "", errors.Wrap(err, "error saving json to infura")
+func shellClient(projectId, projectSecret string) *http.Client {
+	return &http.Client{
+		Transport: authTransport{
+			RoundTripper:  http.DefaultTransport,
+			ProjectId:     projectId,
+			ProjectSecret: projectSecret,
+		},
 	}
+}
 
-	return fmt.Sprintf(IPFSLinkFormat, i.infuraURL, cid), nil
+func NewDefaultInfura(url string, projectId, projectSecret string) Infura {
+	return NewInfura(ipfs.NewShellWithClient(
+		url,
+		shellClient(
+			projectId,
+			projectSecret,
+		),
+	), url)
 }

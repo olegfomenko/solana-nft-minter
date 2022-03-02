@@ -8,31 +8,37 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Solana interface {
-	MintToken(metadata Metadata, meta string, receiver common.PublicKey, primarySaleHappened bool) (string, error)
+type MintConfig struct {
+	Receiver            common.PublicKey
+	Admin               types.Account
+	Creators            []types.Account
+	Metadata            string
+	PrimarySaleHappened bool
+
+	*data
 }
 
-func NewSolana(cli *client.Client, admin types.Account, creators map[string]types.Account) Solana {
-	return &solana{
-		cli,
-		admin,
-		creators,
-	}
+type Solana interface {
+	MintToken(metadata Metadata, config MintConfig) (string, error)
 }
 
 type solana struct {
 	*client.Client
-	admin    types.Account
-	creators map[string]types.Account
 }
 
-func (s *solana) MintToken(metadata Metadata, meta string, receiver common.PublicKey, primarySaleHappened bool) (string, error) {
-	data, err := s.getData(receiver)
+func NewSolana(cli *client.Client) Solana {
+	return &solana{
+		cli,
+	}
+}
+
+func (s *solana) MintToken(metadata Metadata, config MintConfig) (string, error) {
+	err := s.genData(&config)
 	if err != nil {
 		return "", errors.Wrap(err, "error generating mint data")
 	}
 
-	tx, err := s.getMint(data, metadata, meta, primarySaleHappened)
+	tx, err := s.getMint(metadata, config)
 	if err != nil {
 		return "", errors.Wrap(err, "error generating mint tx")
 	}

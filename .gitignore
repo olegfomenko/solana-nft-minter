@@ -2,3 +2,4 @@ vendor
 .idea
 config.yaml
 internal/constants/constants.go
+./test_image.jpeg

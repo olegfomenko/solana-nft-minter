@@ -16,21 +16,21 @@ type toCreate struct {
 	Do   func() (types.Instruction, error)
 }
 
-func (s *solana) getMint(data data, meta Metadata, metadata string, primarySaleHappened bool) ([]byte, error) {
+func (s *solana) getMint(meta Metadata, config MintConfig) ([]byte, error) {
 	blockHash, rent, err := s.getSystemData()
 	if err != nil {
 		return nil, err
 	}
 
-	creators, creatorInstructions, creatorAccouns := s.parseCreators(meta.Properties.Creators, data)
+	creators, creatorInstructions := s.parseCreators(meta.Properties.Creators, config)
 
 	var rawInstructions = []toCreate{
 		{
 			Name: "creating token account",
 			Do: func() (types.Instruction, error) {
 				return sysprog.CreateAccount(
-					s.admin.PublicKey,
-					data.mint.PublicKey,
+					config.Admin.PublicKey,
+					config.mint.PublicKey,
 					common.TokenProgramID,
 					rent,
 					tokenprog.MintAccountSize,
@@ -43,8 +43,8 @@ func (s *solana) getMint(data data, meta Metadata, metadata string, primarySaleH
 			Do: func() (types.Instruction, error) {
 				return tokenprog.InitializeMint(
 					0,
-					data.mint.PublicKey,
-					s.admin.PublicKey,
+					config.mint.PublicKey,
+					config.Admin.PublicKey,
 					common.PublicKey{},
 				)
 			},
@@ -54,17 +54,17 @@ func (s *solana) getMint(data data, meta Metadata, metadata string, primarySaleH
 			Name: "creating & initializing token metadata",
 			Do: func() (types.Instruction, error) {
 				return tokenmeta.CreateMetadataAccount(
-					data.metadataAddress,
-					data.mint.PublicKey,
-					s.admin.PublicKey,
-					s.admin.PublicKey,
-					s.admin.PublicKey,
+					config.metadataAddress,
+					config.mint.PublicKey,
+					config.Admin.PublicKey,
+					config.Admin.PublicKey,
+					config.Admin.PublicKey,
 					true,
 					false,
 					tokenmeta.Data{
 						Name:                 meta.Name,
 						Symbol:               meta.Symbol,
-						Uri:                  metadata,
+						Uri:                  config.Metadata,
 						SellerFeeBasisPoints: uint16(meta.SellerFeeBasisPoints),
 						Creators:             &creators,
 					},
@@ -76,9 +76,9 @@ func (s *solana) getMint(data data, meta Metadata, metadata string, primarySaleH
 			Name: "creating admin account for holding token",
 			Do: func() (types.Instruction, error) {
 				return assotokenprog.CreateAssociatedTokenAccount(
-					s.admin.PublicKey,
-					data.receiver,
-					data.mint.PublicKey,
+					config.Admin.PublicKey,
+					config.Receiver,
+					config.mint.PublicKey,
 				)
 			},
 		},
@@ -87,9 +87,9 @@ func (s *solana) getMint(data data, meta Metadata, metadata string, primarySaleH
 			Name: "minting token to receiver account",
 			Do: func() (types.Instruction, error) {
 				return tokenprog.MintTo(
-					data.mint.PublicKey,
-					data.receiverAssociatedAddress,
-					s.admin.PublicKey,
+					config.mint.PublicKey,
+					config.receiverAssociatedAddress,
+					config.Admin.PublicKey,
 					[]common.PublicKey{},
 					uint64(1),
 				)
@@ -100,11 +100,11 @@ func (s *solana) getMint(data data, meta Metadata, metadata string, primarySaleH
 			Name: "updating authority",
 			Do: func() (types.Instruction, error) {
 				return tokenmeta.UpdateMetadataAccount(
-					data.metadataAddress,
-					s.admin.PublicKey,
+					config.metadataAddress,
+					config.Admin.PublicKey,
 					nil,
 					&common.PublicKey{},
-					&primarySaleHappened,
+					&config.PrimarySaleHappened,
 				)
 			},
 		},
@@ -125,8 +125,8 @@ func (s *solana) getMint(data data, meta Metadata, metadata string, primarySaleH
 	// -- Creating transaction --
 	tx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
 		Instructions:    instructions,
-		Signers:         append(creatorAccouns, s.admin, data.mint),
-		FeePayer:        s.admin.PublicKey,
+		Signers:         append(config.Creators, config.Admin, config.mint),
+		FeePayer:        config.Admin.PublicKey,
 		RecentBlockHash: blockHash,
 	})
 
@@ -151,13 +151,12 @@ func (s *solana) getSystemData() (string, uint64, error) {
 	return blockHash.Blockhash, rent, nil
 }
 
-func (s *solana) parseCreators(creators []Creator, data data) ([]tokenmeta.Creator, []toCreate, []types.Account) {
+func (s *solana) parseCreators(creators []Creator, config MintConfig) ([]tokenmeta.Creator, []toCreate) {
 	tokenCreators := make([]tokenmeta.Creator, len(creators))
 	instructions := make([]toCreate, 0, len(creators))
-	accounts := make([]types.Account, 0, len(creators))
 
 	for i, creator := range creators {
-		verified := creator.Address == s.admin.PublicKey.String()
+		verified := creator.Address == config.Admin.PublicKey.String()
 		address := common.PublicKeyFromString(creator.Address)
 
 		tokenCreators[i] = tokenmeta.Creator{
@@ -170,13 +169,11 @@ func (s *solana) parseCreators(creators []Creator, data data) ([]tokenmeta.Creat
 			instructions = append(instructions, toCreate{
 				Name: "Signing creator " + creator.Address,
 				Do: func() (types.Instruction, error) {
-					return tokenmeta.SignMetadata(data.metadataAddress, address)
+					return tokenmeta.SignMetadata(config.metadataAddress, address)
 				},
 			})
-
-			accounts = append(accounts, s.creators[creator.Address])
 		}
 	}
 
-	return tokenCreators, instructions, accounts
+	return tokenCreators, instructions
 }

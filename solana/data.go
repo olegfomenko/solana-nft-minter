@@ -4,33 +4,27 @@ import (
 	"github.com/olegfomenko/solana-go-sdk/common"
 	"github.com/olegfomenko/solana-go-sdk/program/metaplex/tokenmeta"
 	"github.com/olegfomenko/solana-go-sdk/types"
-	"github.com/pkg/errors"
 )
 
 type data struct {
 	mint                      types.Account
 	metadataAddress           common.PublicKey
-	receiver                  common.PublicKey
 	receiverAssociatedAddress common.PublicKey
 }
 
-func (s *solana) getData(receiver common.PublicKey) (data, error) {
-	mint := types.NewAccount()
+func (s *solana) genData(config *MintConfig) (err error) {
+	config.data = &data{}
+	config.mint = types.NewAccount()
 
-	receiverTokenAccountKey, _, err := common.FindAssociatedTokenAddress(receiver, mint.PublicKey)
+	config.data.receiverAssociatedAddress, _, err = common.FindAssociatedTokenAddress(config.Receiver, config.mint.PublicKey)
 	if err != nil {
-		return data{}, errors.Wrap(err, "error getting associated receiver account pub key")
+		return
 	}
 
-	metaPublicKey, err := tokenmeta.GetTokenMetaPubkey(mint.PublicKey)
+	config.data.metadataAddress, err = tokenmeta.GetTokenMetaPubkey(config.mint.PublicKey)
 	if err != nil {
-		return data{}, errors.Wrap(err, "error getting token metadata pub key")
+		return
 	}
 
-	return data{
-		mint:                      mint,
-		metadataAddress:           metaPublicKey,
-		receiver:                  receiver,
-		receiverAssociatedAddress: receiverTokenAccountKey,
-	}, nil
+	return
 }
