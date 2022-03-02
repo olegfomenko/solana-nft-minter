@@ -1,7 +1,7 @@
 # Solana NFT Minter
 
 [![olegfomenko](https://circleci.com/gh/olegfomenko/solana-nft-minter.svg?style=shield)](https://circleci.com/gh/olegfomenko/solana-nft-minter)
-[![Go Report Card](https://goreportcard.com/badge/github.com/olegfomenko/solana-nft-minter)](https://goreportcard.com/report/github.com/olegfomenko/solana-nft-minter?v=lastCommitID)
+[![Go Report Card](https://goreportcard.com/badge/github.com/olegfomenko/solana-nft-minter?v=lastCommitID)](https://goreportcard.com/report/github.com/olegfomenko/solana-nft-minter?v=lastCommitID)
 
 
 ## Description
