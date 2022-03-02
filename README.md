@@ -1,5 +1,7 @@
 # Solana NFT Minter
 
+[![olegfomenko](https://circleci.com/gh/olegfomenko/solana-nft-minter.svg?style=shield)](https://circleci.com/gh/olegfomenko/solana-nft-minter)
+
 ## Description
 
 Library for minting NFTs from specified image on receiver or admin account. NFT data (image and metadata json) can be
