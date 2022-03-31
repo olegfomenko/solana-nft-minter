@@ -85,5 +85,5 @@ func (s *Solana) checkTxConfirmed(hash string) (bool, error) {
 		return false, errors.Wrap(err, "error checking tx confirm (array is empty)")
 	}
 
-	return statuses[0].Confirmations != nil, nil
+	return statuses[0].Err == nil && statuses[0].ConfirmationStatus != nil, nil
 }
