@@ -6,6 +6,12 @@ import (
 	"github.com/olegfomenko/solana-go-sdk/common"
 	"github.com/olegfomenko/solana-go-sdk/types"
 	"github.com/pkg/errors"
+	"time"
+)
+
+const (
+	DefaultRetries = 5
+	DefaultDelay   = time.Second
 )
 
 type MintConfig struct {
@@ -16,6 +22,11 @@ type MintConfig struct {
 	PrimarySaleHappened bool
 
 	*data
+}
+
+type Config struct {
+	Retries int
+	Delay   time.Duration
 }
 
 type Solana struct {
@@ -41,16 +52,23 @@ func (s *Solana) MintToken(metadata Metadata, config MintConfig) (string, error)
 	return mintHash, nil
 }
 
-func (s *Solana) MintTokenUntilSuccess(metadata Metadata, config MintConfig, maxRetries int) (string, error) {
-	err := s.genData(&config)
+func (s *Solana) MintTokenUntilSuccess(metadata Metadata, mintConfig MintConfig, config *Config) (string, error) {
+	if config == nil {
+		config = &Config{
+			Retries: DefaultRetries,
+			Delay:   DefaultDelay,
+		}
+	}
+
+	err := s.genData(&mintConfig)
 	if err != nil {
 		return "", errors.Wrap(err, "error generating mint data")
 	}
 
-	return s.mintTokenUntilSuccess(metadata, config, maxRetries)
+	return s.mintTokenUntilSuccess(metadata, mintConfig, config.Retries, config.Delay)
 }
 
-func (s *Solana) mintTokenUntilSuccess(metadata Metadata, config MintConfig, retries int) (string, error) {
+func (s *Solana) mintTokenUntilSuccess(metadata Metadata, config MintConfig, retries int, delay time.Duration) (string, error) {
 	for _i := 0; _i < retries; _i++ {
 		tx, err := s.getMint(metadata, config)
 		if err != nil {
@@ -61,6 +79,8 @@ func (s *Solana) mintTokenUntilSuccess(metadata Metadata, config MintConfig, ret
 		if err != nil {
 			return "", errors.Wrap(err, "error sending mint tx")
 		}
+
+		time.Sleep(delay)
 
 		ok, err := s.checkTxConfirmed(mintHash)
 		if err != nil {
@@ -85,5 +105,5 @@ func (s *Solana) checkTxConfirmed(hash string) (bool, error) {
 		return false, errors.Wrap(err, "error checking tx confirm (array is empty)")
 	}
 
-	return statuses[0].Confirmations != nil, nil
+	return statuses[0].Err == nil && statuses[0].ConfirmationStatus != nil, nil
 }
