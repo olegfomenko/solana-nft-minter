@@ -36,8 +36,9 @@ Solana part
 ```go
 var admin types.Account{}
 
-sol := solana.NewSolana(client.NewClient("https://api.devnet.solana.com"))
+sol := solana.Solana{client.NewClient("https://api.devnet.solana.com")}
 
+// Also you can use MintTokenUntilSuccess
 hash, err := sol.MintToken(metadata, solana.MintConfig{
     Receiver:            admin.PublicKey,
     Admin:               admin,
