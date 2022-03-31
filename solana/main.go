@@ -18,21 +18,11 @@ type MintConfig struct {
 	*data
 }
 
-type Solana interface {
-	MintToken(metadata Metadata, config MintConfig) (string, error)
-}
-
-type solana struct {
+type Solana struct {
 	*client.Client
 }
 
-func NewSolana(cli *client.Client) Solana {
-	return &solana{
-		cli,
-	}
-}
-
-func (s *solana) MintToken(metadata Metadata, config MintConfig) (string, error) {
+func (s *Solana) MintToken(metadata Metadata, config MintConfig) (string, error) {
 	err := s.genData(&config)
 	if err != nil {
 		return "", errors.Wrap(err, "error generating mint data")
@@ -49,4 +39,51 @@ func (s *solana) MintToken(metadata Metadata, config MintConfig) (string, error)
 	}
 
 	return mintHash, nil
+}
+
+func (s *Solana) MintTokenUntilSuccess(metadata Metadata, config MintConfig, maxRetries int) (string, error) {
+	err := s.genData(&config)
+	if err != nil {
+		return "", errors.Wrap(err, "error generating mint data")
+	}
+
+	return s.mintTokenUntilSuccess(metadata, config, maxRetries)
+}
+
+func (s *Solana) mintTokenUntilSuccess(metadata Metadata, config MintConfig, retries int) (string, error) {
+	for _i := 0; _i < retries; _i++ {
+		tx, err := s.getMint(metadata, config)
+		if err != nil {
+			return "", errors.Wrap(err, "error generating mint tx")
+		}
+
+		mintHash, err := s.SendRawTransaction(context.Background(), tx)
+		if err != nil {
+			return "", errors.Wrap(err, "error sending mint tx")
+		}
+
+		ok, err := s.checkTxConfirmed(mintHash)
+		if err != nil {
+			return "", err
+		}
+
+		if ok {
+			return mintHash, nil
+		}
+	}
+
+	return "", errors.New("failed to send and check transaction: max retries proceed")
+}
+
+func (s *Solana) checkTxConfirmed(hash string) (bool, error) {
+	statuses, err := s.GetSignatureStatuses(context.Background(), []string{hash})
+	if err != nil {
+		return false, errors.Wrap(err, "error checking tx confirm")
+	}
+
+	if len(statuses) < 1 {
+		return false, errors.Wrap(err, "error checking tx confirm (array is empty)")
+	}
+
+	return statuses[0].Confirmations != nil, nil
 }

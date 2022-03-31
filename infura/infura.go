@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-func (i *infura) AddInfuraJSON(val interface{}) (string, error) {
+func (i *Infura) AddInfuraJSON(val interface{}) (string, error) {
 	jsonMetadata, err := json.Marshal(val)
 	if err != nil {
 		return "", err
@@ -19,7 +19,7 @@ func (i *infura) AddInfuraJSON(val interface{}) (string, error) {
 	return cid, nil
 }
 
-func (i *infura) AddInfuraImage(path string) (string, error) {
+func (i *Infura) AddInfuraImage(path string) (string, error) {
 	cid, err := i.infura.AddDir(path)
 	if err != nil {
 		return "", err

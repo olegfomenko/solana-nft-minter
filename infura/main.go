@@ -5,19 +5,13 @@ import (
 	"net/http"
 )
 
-type Infura interface {
-	AddInfuraJSON(val interface{}) (string, error)
-	AddInfuraImage(path string) (string, error)
-	GetLinkIPFS(cid string) string
-}
-
-type infura struct {
+type Infura struct {
 	infura    *ipfs.Shell
 	infuraURL string
 }
 
-func NewInfura(shell *ipfs.Shell, infuraURL string) Infura {
-	return &infura{
+func NewInfura(shell *ipfs.Shell, infuraURL string) *Infura {
+	return &Infura{
 		infura:    shell,
 		infuraURL: infuraURL,
 	}
@@ -39,7 +33,7 @@ func shellClient(projectId, projectSecret string) *http.Client {
 	}
 }
 
-func NewDefaultInfura(url string, projectId, projectSecret string) Infura {
+func NewDefaultInfura(url string, projectId, projectSecret string) *Infura {
 	return NewInfura(ipfs.NewShellWithClient(
 		url,
 		shellClient(

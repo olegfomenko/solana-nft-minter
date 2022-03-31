@@ -16,7 +16,7 @@ type toCreate struct {
 	Do   func() (types.Instruction, error)
 }
 
-func (s *solana) getMint(meta Metadata, config MintConfig) ([]byte, error) {
+func (s *Solana) getMint(meta Metadata, config MintConfig) ([]byte, error) {
 	blockHash, rent, err := s.getSystemData()
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (s *solana) getMint(meta Metadata, config MintConfig) ([]byte, error) {
 	return tx, nil
 }
 
-func (s *solana) getSystemData() (string, uint64, error) {
+func (s *Solana) getSystemData() (string, uint64, error) {
 	blockHash, err := s.GetRecentBlockhash(context.Background())
 	if err != nil {
 		return "", 0, errors.Wrap(err, "error getting recent block hash")
@@ -151,7 +151,7 @@ func (s *solana) getSystemData() (string, uint64, error) {
 	return blockHash.Blockhash, rent, nil
 }
 
-func (s *solana) parseCreators(creators []Creator, config MintConfig) ([]tokenmeta.Creator, []toCreate) {
+func (s *Solana) parseCreators(creators []Creator, config MintConfig) ([]tokenmeta.Creator, []toCreate) {
 	tokenCreators := make([]tokenmeta.Creator, len(creators))
 	instructions := make([]toCreate, 0, len(creators))
 

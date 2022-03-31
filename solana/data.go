@@ -12,7 +12,7 @@ type data struct {
 	receiverAssociatedAddress common.PublicKey
 }
 
-func (s *solana) genData(config *MintConfig) (err error) {
+func (s *Solana) genData(config *MintConfig) (err error) {
 	config.data = &data{}
 	config.mint = types.NewAccount()
 
