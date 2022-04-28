@@ -43,9 +43,5 @@ func (c *Connector) Upload(file File) (string, error) {
 		return "", err
 	}
 
-	if u.Scheme != "https" {
-		u.Scheme = "https"
-	}
-
 	return u.String(), nil
 }

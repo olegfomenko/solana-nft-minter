@@ -7,6 +7,7 @@ require (
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/olegfomenko/solana-go-sdk v1.9.7
 	github.com/pkg/errors v0.9.1
+	github.com/stretchr/testify v1.7.0
 )
 
 require (
@@ -38,7 +39,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/whyrusleeping/tar-utils v0.0.0-20180509141711-8c6c8ba81d5c // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
