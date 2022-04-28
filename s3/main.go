@@ -15,14 +15,16 @@ type File struct {
 }
 
 type Connector struct {
-	session *session.Session
-	bucket  string
+	session    *session.Session
+	bucket     string
+	disableSsl bool
 }
 
-func NewConnector(s *session.Session, bucket string) *Connector {
+func NewConnector(s *session.Session, bucket string, disableSsl bool) *Connector {
 	return &Connector{
-		session: s,
-		bucket:  bucket,
+		session:    s,
+		bucket:     bucket,
+		disableSsl: disableSsl,
 	}
 }
 
@@ -43,7 +45,9 @@ func (c *Connector) Upload(file File) (string, error) {
 		return "", err
 	}
 
-	if u.Scheme != "https" {
+	if c.disableSsl {
+		u.Scheme = "http"
+	} else {
 		u.Scheme = "https"
 	}
 
